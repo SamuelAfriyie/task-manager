@@ -20,20 +20,20 @@
       <CardContent>
         <form @submit.prevent="handleLogin" class="space-y-4">
           <div class="space-y-2">
-            <Label for="username" class="text-sm font-medium text-gray-700">
-              Username
+            <Label for="email" class="text-sm font-medium text-gray-700">
+              Email
             </Label>
             <Input
-              id="username"
-              v-model="username"
+              id="email"
+              v-model="email"
               type="text"
-              placeholder="Enter your username"
+              placeholder="Enter your email"
               class="w-full"
-              :class="errors.username ? 'border-red-500 focus-visible:ring-red-500' : ''"
+              :class="errors.email ? 'border-red-500 focus-visible:ring-red-500' : ''"
               required
             />
-            <p v-if="errors.username" class="text-sm text-red-600">
-              {{ errors.username }}
+            <p v-if="errors.email" class="text-sm text-red-600">
+              {{ errors.email }}
             </p>
           </div>
 
@@ -55,19 +55,7 @@
             </p>
           </div>
 
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2">
-              <Checkbox
-                id="remember"
-                v-model:checked="rememberMe"
-              />
-              <Label
-                for="remember"
-                class="text-sm font-normal text-gray-600 cursor-pointer"
-              >
-                Remember me
-              </Label>
-            </div>
+          <div class="flex items-center justify-end">
             <Button
               variant="link"
               class="h-auto p-0 text-sm text-blue-600 hover:text-blue-800"
@@ -131,26 +119,30 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
+import { useRouter } from 'vue-router'
+import { authService } from '@/service/AuthService'
+import { useUserStore } from '@/store/userUserStore'
+
+const router = useRouter();
+const user = useUserStore();
 
 // Reactive data
-const username = ref('')
+const email = ref('')
 const password = ref('')
-const rememberMe = ref(false)
 const showPassword = ref(false)
 const loading = ref(false)
 const errors = ref({
-  username: '',
+  email: '',
   password: ''
 })
 
 // Methods
 const validateForm = () => {
-  errors.value = { username: '', password: '' }
+  errors.value = { email: '', password: '' }
   let isValid = true
 
-  if (!username.value.trim()) {
-    errors.value.username = 'Username is required'
+  if (!email.value.trim()) {
+    errors.value.email = 'Email is required'
     isValid = false
   }
 
@@ -173,20 +165,12 @@ const handleLogin = async () => {
   loading.value = true
 
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Replace with your actual authentication
-    console.log('Login attempt:', {
-      username: username.value,
-      rememberMe: rememberMe.value
-    })
-    
-    // Redirect on success
-    // router.push('/dashboard')
-    
+    const credentials = {email: email.value, password: password.value};
+    const {data: userData} = await authService.login(credentials);
+    user.setUser(userData) 
+    router.push('/dashboard')
   } catch (error) {
-    errors.value.password = 'Invalid username or password'
+    errors.value.password = 'Invalid email or password'
   } finally {
     loading.value = false
   }

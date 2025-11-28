@@ -192,6 +192,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { authService } from '@/service/AuthService'
+import { email } from 'zod/v4'
 
 const router = useRouter()
 
@@ -201,8 +203,6 @@ const form = ref({
   email: '',
   password: '',
   confirmPassword: '',
-  acceptedTerms: false,
-  subscribeNewsletter: false
 })
 
 const showPassword = ref(false)
@@ -212,7 +212,6 @@ const errors = ref({
   email: '',
   password: '',
   confirmPassword: '',
-  acceptedTerms: ''
 })
 
 // Validation methods
@@ -232,8 +231,7 @@ const validateForm = () => {
     username: '', 
     email: '', 
     password: '', 
-    confirmPassword: '', 
-    acceptedTerms: '' 
+    confirmPassword: '',  
   }
   
   let isValid = true
@@ -274,12 +272,6 @@ const validateForm = () => {
     isValid = false
   }
 
-  // Terms validation
-  if (!form.value.acceptedTerms) {
-    errors.value.acceptedTerms = 'You must accept the terms and conditions'
-    isValid = false
-  }
-
   return isValid
 }
 
@@ -291,18 +283,15 @@ const handleSignup = async () => {
   loading.value = true
 
   try {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // Replace with your actual signup API call
-    console.log('Signup attempt:', {
-      username: form.value.username,
+    const userData = {
+      name: form.value.username,
       email: form.value.email,
-      subscribeNewsletter: form.value.subscribeNewsletter
-    })
-    
-    // Redirect to login or dashboard on success
-    // router.push('/login?message=account_created')
+      password: form.value.password
+    }
+    await authService.signup(userData);
+
+    router.push('/login?message=account_created')
     
   } catch (error) {
     // Handle API errors

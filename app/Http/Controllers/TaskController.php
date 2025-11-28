@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\TaskStatus;
 use App\Helpers\ResponseHelper;
+use App\Http\Resources\TaskResource;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -25,8 +26,8 @@ class TaskController extends Controller
             });
         }
 
-        $projects = $query->orderBy('created_at', 'desc')->get();
-        return ResponseHelper::success($projects, 'success', 200);
+        $tasks = $query->orderBy('created_at', 'desc')->get();
+        return ResponseHelper::success(TaskResource::collection($tasks), 'success', 200);
     }
 
 
@@ -51,7 +52,7 @@ class TaskController extends Controller
                 'assigned_date' => $request->assignedDate,
                 'project_id' => $request->projectId
             ]);
-            return ResponseHelper::success($task, 'Task created', 201);
+            return ResponseHelper::success(new TaskResource($task), 'Task created', 201);
         } catch (\Exception $e) {
 
             Log::error('Task creation failed', [
@@ -81,7 +82,7 @@ class TaskController extends Controller
         }
 
         try {
-            return  ResponseHelper::success($task);
+            return  ResponseHelper::success(new TaskResource($task));
         } catch (\Exception $e) {
             Log::error('Failed to fetch task', [
                 'task_id' => $task->id,
@@ -113,7 +114,7 @@ class TaskController extends Controller
                 'status' => $request->status,
                 'assigned_date' => $request->assignedDate,
             ]);
-            return ResponseHelper::success($task, 'Task updated', 202);
+            return ResponseHelper::success(new TaskResource($task), 'Task updated', 202);
         } catch (\Exception $e) {
 
             Log::error('Task updating failed', [
@@ -132,7 +133,7 @@ class TaskController extends Controller
     {
         try {
             $task->delete();
-            return ResponseHelper::success($task, 'Task deleted', 204);
+            return ResponseHelper::success(new TaskResource($task), 'Task deleted', 204);
         } catch (\Exception $e) {
             Log::error('Task deletion failed', [
                 'error' => $e->getMessage(),
@@ -147,7 +148,7 @@ class TaskController extends Controller
     {
         try {
             $task->update(['status' => TaskStatus::Completed->value]);
-            return ResponseHelper::success($task, 'Task completed', 202);
+            return ResponseHelper::success(new TaskResource($task), 'Task completed', 202);
         } catch (\Exception $e) {
             Log::error('Task update failed', [
                 'error' => $e->getMessage(),

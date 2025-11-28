@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
 use App\Helpers\ResponseHelper;
+use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use Illuminate\Http\Request;
 
@@ -25,7 +26,7 @@ class ProjectController extends Controller
         }
 
         $projects = $query->orderBy('created_at', 'desc')->get();
-        return ResponseHelper::success($projects, 'success', 200);
+        return ResponseHelper::success(ProjectResource::collection($projects), 'success', 200);
     }
 
     /**
@@ -46,7 +47,7 @@ class ProjectController extends Controller
                 'deadline_date' => $request->deadlineDate,
                 'user_id' => auth('sanctum')->id()
             ]);
-            return ResponseHelper::success($project, 'Project created', 201);
+            return ResponseHelper::success(new ProjectResource($project), 'Project created', 201);
         } catch (\Exception $e) {
 
             Log::error('Project creation failed', [
@@ -83,7 +84,7 @@ class ProjectController extends Controller
                     $query->orderBy('assigned_date', 'desc');
                 },
             ]);
-            return ResponseHelper::success($project);
+            return ResponseHelper::success(new ProjectResource($project));
         } catch (\Exception $e) {
             Log::error('Failed to fetch project', [
                 'project_id' => $project->id,
@@ -113,7 +114,7 @@ class ProjectController extends Controller
                 'desc' => $request->desc,
                 'deadline_date' => $request->deadlineDate,
             ]);
-            return ResponseHelper::success($project, 'Project updated', 202);
+            return ResponseHelper::success(new ProjectResource($project), 'Project updated', 202);
         } catch (\Exception $e) {
 
             Log::error('Project updation failed', [
@@ -132,7 +133,7 @@ class ProjectController extends Controller
     {
         try {
             $project->delete();
-            return ResponseHelper::success($project, 'Project deleted', 204);
+            return ResponseHelper::success(new ProjectResource($project), 'Project deleted', 204);
         } catch (\Exception $e) {
             Log::error('Project deletion failed', [
                 'error' => $e->getMessage(),
