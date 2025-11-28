@@ -1,6 +1,6 @@
 <template>
   <Sheet :open="open" @update:open="$emit('close')">
-    <SheetContent class="sm:max-w-2xl overflow-y-auto">
+    <SheetContent class="sm:max-w-lg overflow-y-auto">
       <SheetHeader class="text-left">
         <SheetTitle class="flex items-center justify-between">
           <span>{{ project?.title }}</span>
@@ -24,14 +24,14 @@
         </SheetDescription>
       </SheetHeader>
 
-      <div class="mt-6 space-y-6">
+      <div class="mt-6 space-y-6 px-4">
         <!-- Project Overview -->
         <Card>
           <CardContent class="p-4">
             <div class="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p class="text-gray-500">Deadline</p>
-                <p class="font-medium">{{ formatDate(project?.deadline) }}</p>
+                <p class="font-medium">{{ formatDate(project?.deadlineDate) }}</p>
               </div>
               <div>
                 <p class="text-gray-500">Status</p>
@@ -41,7 +41,7 @@
               </div>
               <div>
                 <p class="text-gray-500">Total Tasks</p>
-                <p class="font-medium">{{ project?.taskCount }}</p>
+                <p class="font-medium">{{ project?.tasks.length }}</p>
               </div>
               <div>
                 <p class="text-gray-500">Completion</p>
@@ -55,7 +55,7 @@
         </Card>
 
         <!-- Tasks Section -->
-        <div>
+        <div class="mb-4">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold">Tasks</h3>
             <Button @click="showTaskForm = true" size="sm">
@@ -182,10 +182,6 @@ const props = defineProps({
     type: Object,
     default: null
   },
-  tasks: {
-    type: Array,
-    default: () => []
-  }
 })
 
 const emit = defineEmits(['close', 'task-created', 'task-updated', 'task-deleted', 'edit-project', 'delete-project'])
@@ -198,15 +194,15 @@ const editingTask = ref(null)
 // Computed
 const filteredTasks = computed(() => {
   if (currentFilter.value === 'all') {
-    return props.tasks
+    return props.project?.tasks ?? []
   }
-  return props.tasks.filter(task => task.status === currentFilter.value)
+  return props.project?.tasks?.filter(task => task.status === currentFilter.value)
 })
 
 const taskStatuses = computed(() => [
   { value: 'all', label: 'All Tasks' },
   { value: 'pending', label: 'Pending' },
-  { value: 'in-progress', label: 'In Progress' },
+  { value: 'inprogress', label: 'In Progress' },
   { value: 'completed', label: 'Completed' }
 ])
 
@@ -223,7 +219,7 @@ const getStatusVariant = (status) => {
 const getTaskStatusVariant = (status) => {
   const variants = {
     'pending': 'secondary',
-    'in-progress': 'default',
+    'inprogress': 'default',
     'completed': 'outline'
   }
   return variants[status] || 'secondary'
@@ -241,7 +237,13 @@ const formatDate = (dateString) => {
 const toggleTaskStatus = (task) => {
   const newStatus = task.status === 'completed' ? 'pending' : 'completed'
   const updatedTask = { ...task, status: newStatus }
-  emit('task-updated', updatedTask)
+
+  const index = props.project.tasks.findIndex(t => t.id === updatedTask.id)
+
+  if (index !== -1) {
+   props.project.tasks[index] = updatedTask;
+   props.project.status = 'inprogress';
+  }
 }
 
 const editTask = (task) => {

@@ -23,10 +23,10 @@
 
           <!-- Description -->
           <div class="space-y-2">
-            <Label for="description">Description</Label>
+            <Label for="desc">Description</Label>
             <Textarea
-              id="description"
-              v-model="form.description"
+              id="desc"
+              v-model="form.desc"
               placeholder="Describe the project..."
               rows="3"
             />
@@ -34,10 +34,10 @@
 
           <!-- Deadline -->
           <div class="space-y-2">
-            <Label for="deadline">Deadline</Label>
+            <Label for="deadlineDate">Deadline</Label>
             <Input
-              id="deadline"
-              v-model="form.deadline"
+              id="deadlineDate"
+              v-model="form.deadlineDate"
               type="date"
               required
             />
@@ -64,6 +64,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { projectService } from '@/service/ProjectService'
 
 // Props
 const props = defineProps({
@@ -82,21 +83,21 @@ const emit = defineEmits(['close', 'saved'])
 // Form state
 const form = reactive({
   title: '',
-  description: '',
-  deadline: ''
+  desc: '',
+  deadlineDate: ''
 })
 
 const errors = reactive({
   title: '',
-  deadline: ''
+  deadlineDate: ''
 })
 
 // Watch for editing project changes
 watch(() => props.editingProject, (project) => {
   if (project) {
     form.title = project.title
-    form.description = project.description
-    form.deadline = project.deadline
+    form.desc = project.desc
+    form.deadlineDate = project.deadlineDate
   } else {
     resetForm()
   }
@@ -112,43 +113,48 @@ watch(() => props.open, (isOpen) => {
 // Methods
 const resetForm = () => {
   form.title = ''
-  form.description = ''
-  form.deadline = ''
+  form.desc = ''
+  form.deadlineDate = ''
   errors.title = ''
-  errors.deadline = ''
+  errors.deadlineDate = ''
 }
 
 const validateForm = () => {
   let isValid = true
   errors.title = ''
-  errors.deadline = ''
+  errors.deadlineDate = ''
 
   if (!form.title.trim()) {
     errors.title = 'Project title is required'
     isValid = false
   }
 
-  if (!form.deadline) {
-    errors.deadline = 'Deadline is required'
+  if (!form.deadlineDate) {
+    errors.deadlineDate = 'Deadline is required'
     isValid = false
-  } else if (new Date(form.deadline) < new Date().setHours(0, 0, 0, 0)) {
-    errors.deadline = 'Deadline cannot be in the past'
+  } else if (new Date(form.deadlineDate) < new Date().setHours(0, 0, 0, 0)) {
+    errors.deadlineDate = 'Deadline cannot be in the past'
     isValid = false
   }
 
   return isValid
 }
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (!validateForm()) {
     return
   }
 
   const projectData = {
-    ...form,
-    id: props.editingProject?.id || Date.now()
+    ...form
   }
-
+if(props.editingProject?.id == undefined) {
+  await projectService.create(projectData);
+  projectData.id = Date.now();
+} else {
+  projectData.id = props.editingProject?.id ;
+  await projectService.update(projectData);
+}
   emit('saved', projectData)
   emit('close')
 }

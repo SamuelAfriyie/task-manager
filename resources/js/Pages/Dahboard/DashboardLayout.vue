@@ -60,7 +60,7 @@
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600">Completed</p>
-                  <p class="text-2xl font-bold text-gray-900">{{ stats.completedProjects }}</p>
+                  <p class="text-2xl font-bold text-gray-900">{{ stats.completedProjects.valueOf() }}</p>
                 </div>
               </div>
             </CardContent>
@@ -76,7 +76,7 @@
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600">In Progress</p>
-                  <p class="text-2xl font-bold text-gray-900">{{ stats.inProgressProjects }}</p>
+                  <p class="text-2xl font-bold text-gray-900">{{ stats.inProgressProjects.valueOf() }}</p>
                 </div>
               </div>
             </CardContent>
@@ -92,7 +92,7 @@
                 </div>
                 <div class="ml-4">
                   <p class="text-sm font-medium text-gray-600">Overdue</p>
-                  <p class="text-2xl font-bold text-gray-900">{{ stats.overdueProjects }}</p>
+                  <p class="text-2xl font-bold text-gray-900">{{ stats.overdueProjects.valueOf() }}</p>
                 </div>
               </div>
             </CardContent>
@@ -197,8 +197,7 @@
     <!-- Project Details Sheet -->
     <ProjectDetailsSheet
       :open="showProjectDetails"
-      :project="selectedProject"
-      :tasks="filteredTasks"
+      :project="selectedProject" 
       @close="showProjectDetails = false"
       @task-created="handleTaskCreated"
       @task-updated="handleTaskUpdated"
@@ -246,7 +245,7 @@ const tasks = ref([])
 const showBackToTop = ref(false)
 
 // Computed
-const stats = () => ({
+const stats = ({
   totalProjects: projects.value.length,
   completedProjects: projects.value.filter(p => p.completion === 100).length,
   inProgressProjects: projects.value.filter(p => p.completion > 0 && p.completion < 100).length,
@@ -391,7 +390,7 @@ const updateProjectStats = (projectId) => {
   const completedTasks = projectTasks.filter(t => t.status === 'completed').length
   const completion = projectTasks.length > 0 ? Math.round((completedTasks / projectTasks.length) * 100) : 0
   
-  const projectIndex = projects.value.findIndex(p => p.id === projectId)
+  const projectIndex = projects?.value?.findIndex(p => p.id === projectId)
   if (projectIndex !== -1) {
     projects.value[projectIndex].taskCount = projectTasks.length
     projects.value[projectIndex].completion = completion
@@ -435,7 +434,6 @@ const loadFromLocalStorage = () => {
 const fetchProjects = async ()  => {
   try {
     const {data: prjs} = await projectService.getAll();
-    console.log("Projects: ", prjs);
     projects.value = prjs;
   } catch (e) {
     console.log(e);
@@ -448,64 +446,7 @@ onMounted(() => {
   // loadFromLocalStorage()
  fetchProjects();
   
-  // If no data in localStorage, load sample data
-  // if (projects.value.length === 0) {
-  //   projects.value = [
-  //     {
-  //       id: 1,
-  //       title: 'Website Redesign',
-  //       description: 'Complete redesign of company website with modern UI/UX',
-  //       deadline: '2024-12-31',
-  //       completion: 75,
-  //       taskCount: 3,
-  //       status: 'active',
-  //       createdAt: '2024-01-01'
-  //     },
-  //     {
-  //       id: 2,
-  //       title: 'Mobile App Development',
-  //       description: 'Build cross-platform mobile application for task management',
-  //       deadline: '2024-11-30',
-  //       completion: 30,
-  //       taskCount: 2,
-  //       status: 'active',
-  //       createdAt: '2024-01-05'
-  //     }
-  //   ]
-  // }
-  
-  if (tasks.value.length === 0) {
-    tasks.value = [
-      {
-        id: 1,
-        title: 'Design Homepage Layout',
-        description: 'Create wireframes and mockups for homepage',
-        status: 'completed',
-        assignedDate: '2024-01-10',
-        projectId: 1,
-        createdAt: '2024-01-10'
-      },
-      {
-        id: 2,
-        title: 'Implement User Authentication',
-        description: 'Set up login and registration system',
-        status: 'in-progress',
-        assignedDate: '2024-01-12',
-        projectId: 1,
-        createdAt: '2024-01-12'
-      },
-      {
-        id: 3,
-        title: 'Database Schema Design',
-        description: 'Design and implement database structure',
-        status: 'pending',
-        assignedDate: '2024-01-15',
-        projectId: 1,
-        createdAt: '2024-01-15'
-      }
-    ]
-  }
-
+ 
   // Initialize project stats
   projects.value.forEach(project => {
     updateProjectStats(project.id)
