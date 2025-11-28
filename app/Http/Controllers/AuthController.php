@@ -6,8 +6,6 @@ use App\Enums\UserRole;
 use App\Helpers\ResponseHelper;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-// use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -22,12 +20,12 @@ class AuthController extends Controller
      */
     public function index(): Response
     {
-        return Inertia::render('Auth/Login');
+        return Inertia::render('Login');
     }
 
     public function signupPage(): Response
     {
-        return Inertia::render('Auth/Signup');
+        return Inertia::render('Signup');
     }
 
 
