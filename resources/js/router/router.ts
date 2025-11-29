@@ -1,4 +1,3 @@
-// router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import Signup from "../Pages/Auth/Signup.vue"
 import DashboardLayout from "../Pages/Dahboard/DashboardLayout.vue"
@@ -32,10 +31,20 @@ const router = createRouter({
 })
 
 
-// Global beforeEach guard
 // Simple midleware to restrict access
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem('authToken')
+
+  if (to.path === '/') {
+    if (isAuthenticated) {
+      // If logged in, redirect to dashboard
+      next('/dashboard')
+    } else {
+      // If not logged in, redirect to login
+      next('/login')
+    }
+    return
+  }
 
   // Check if route requires auth
   if (to.meta.requiresAuth && !isAuthenticated) {
