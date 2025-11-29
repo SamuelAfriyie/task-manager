@@ -311,16 +311,15 @@ const handleEditProject = (project) => {
   showProjectDetails.value = false
 }
 
-const handleDeleteProject = (projectId) => {
-    projects.value = projects.value.filter(p => p.id !== projectId)
-    
-    if (selectedProject.value?.id === projectId) {
-      selectedProject.value = null
-      showProjectDetails.value = false
-    }
+const handleDeleteProject = async (projectId) => {
+  if (selectedProject.value?.id === projectId) {
+    selectedProject.value = null
+    showProjectDetails.value = false
+  }
+  await fetchProjects();
 }
 
-const handleProjectSaved = (projectData) => {
+const _handleProjectSaved = (projectData) => {
   if (projectData.id && projects.value.some(p => p.id === projectData.id)) {
     // Update existing project
     const index = projects.value.findIndex(p => p.id === projectData.id)

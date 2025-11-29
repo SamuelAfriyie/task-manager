@@ -10,24 +10,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class AuthController extends Controller
 {
-    /**
-     * Display the login view.
-     */
-    public function index(): Response
-    {
-        return Inertia::render('Login');
-    }
-
-    public function signupPage(): Response
-    {
-        return Inertia::render('Signup');
-    }
-
 
     public function login(Request $request)
     {
@@ -113,12 +98,7 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Auth::logout();
-
-        // $request->session()->invalidate();
-        // $request->session()->regenerateToken();
         try {
-            //code...
             $request->user()->currentAccessToken()->delete();
             return ResponseHelper::success(null, "You have been securely logged out.");
         } catch (\Exception $e) {
