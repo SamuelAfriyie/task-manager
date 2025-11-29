@@ -319,26 +319,6 @@ const handleDeleteProject = async (projectId) => {
   await fetchProjects();
 }
 
-const _handleProjectSaved = (projectData) => {
-  if (projectData.id && projects.value.some(p => p.id === projectData.id)) {
-    // Update existing project
-    const index = projects.value.findIndex(p => p.id === projectData.id)
-    if (index !== -1) {
-      projects.value[index] = { 
-        ...projects.value[index], 
-        ...projectData,
-        completion: projects.value[index].completion || 0,
-        taskCount: projects.value[index].tasks.value.filter(t => t.projectId === projectData.id).length
-      }
-    }
-  } else {
-    // Create new project
-    projects.value = [projectData, ...projects.value]
-  }
-  
-  handleCloseProjectForm();
-}
-
 const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', {
     month: 'short',
