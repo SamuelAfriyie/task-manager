@@ -5,7 +5,7 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <div class="flex items-center">
-            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
+            <div class="w-8 h-8 bg-black rounded-lg flex items-center justify-center mr-3">
               <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
               </svg>
@@ -30,12 +30,12 @@
       </div>
     </header>
 
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto py-2 sm:px-6 lg:px-8">
       <div class="px-4 py-6 sm:px-0">
         <!-- Stats Overview -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent class="p-6">
+          <Card class="shadow-sm border-0">
+            <CardContent class="py-4 px-6">
               <div class="flex items-center">
                 <div class="p-2 bg-blue-100 rounded-lg">
                   <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,8 +50,8 @@
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent class="p-6">
+          <Card class="shadow-sm border-0">
+            <CardContent class="py-4 px-6">
               <div class="flex items-center">
                 <div class="p-2 bg-green-100 rounded-lg">
                   <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -66,8 +66,8 @@
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent class="p-6">
+          <Card class="shadow-sm border-0">
+            <CardContent class="py-4 px-6">
               <div class="flex items-center">
                 <div class="p-2 bg-yellow-100 rounded-lg">
                   <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,8 +82,8 @@
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent class="p-6">
+          <Card class="shadow-sm border-0">
+            <CardContent class="py-4 px-6">
               <div class="flex items-center">
                 <div class="p-2 bg-red-100 rounded-lg">
                   <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,6 +119,7 @@
               <CardContent>
                 <ProjectsList
                   :projects="projects"
+                  :loading="loading"
                   @project-selected="handleProjectSelected"
                   @edit-project="handleEditProject"
                   @delete-project="handleDeleteProject"
@@ -138,12 +139,12 @@
               <CardContent>
                 <div class="space-y-4">
                   <div v-for="project in projects?.slice(0, 5)" :key="project.id" class="flex items-center justify-between">
-                    <div class="flex-1">
+                    <div class="w-full">
                       <div class="flex items-center justify-between mb-1">
                         <span class="text-sm font-medium text-gray-700 truncate mr-2">{{ project.title }}</span>
                         <span class="text-sm text-gray-500 whitespace-nowrap">{{ project.completion }}%</span>
                       </div>
-                      <Progress :value="project.completion" class="w-full" />
+                      <Progress :modelValue="project.completion" class="w-full" />
                     </div>
                   </div>
                   <div v-if="projects.length === 0" class="text-center py-4 text-gray-500">
@@ -162,20 +163,20 @@
               <CardContent>
                 <div class="space-y-3">
                   <div 
-                    v-for="project in upcomingDeadlines" 
+                    v-for="project in upcomingDeadlines()" 
                     :key="project.id" 
                     class="flex items-center justify-between p-3 bg-orange-50 rounded-lg border border-orange-100 cursor-pointer hover:bg-orange-100 transition-colors"
                     @click="handleProjectSelected(project)"
                   >
                     <div class="flex-1 min-w-0">
                       <p class="text-sm font-medium text-gray-900 truncate">{{ project.title }}</p>
-                      <p class="text-xs text-gray-500">Due {{ formatDate(project.deadline) }}</p>
+                      <p class="text-xs text-gray-500">Due {{ formatDate(project.deadlineDate) }}</p>
                     </div>
                     <Badge variant="secondary" class="whitespace-nowrap">
                       {{ project.daysLeft }} days
                     </Badge>
                   </div>
-                  <div v-if="upcomingDeadlines.length === 0" class="text-center py-4 text-gray-500">
+                  <div v-if="upcomingDeadlines().length === 0" class="text-center py-4 text-gray-500">
                     No upcoming deadlines
                   </div>
                 </div>
@@ -191,7 +192,7 @@
       :open="showProjectForm" 
       :editing-project="editingProject"
       @close="handleCloseProjectForm"
-      @saved="handleProjectSaved"
+      @saved="fetchProjects"
     />
 
     <!-- Project Details Sheet -->
@@ -199,9 +200,9 @@
       :open="showProjectDetails"
       :project="selectedProject" 
       @close="showProjectDetails = false"
-      @task-created="handleTaskCreated"
-      @task-updated="handleTaskUpdated"
-      @task-deleted="handleTaskDeleted"
+      @task-created="fetchProjects"
+      @task-updated="fetchProjects"
+      @task-deleted="fetchProjects"
       @edit-project="handleEditProject"
       @delete-project="handleDeleteProject"
     />
@@ -210,7 +211,7 @@
     <button
       v-if="showBackToTop"
       @click="scrollToTop"
-      class="fixed bottom-8 right-8 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-200 z-40"
+      class="fixed bottom-8 right-8 bg-black text-white p-3 rounded-full shadow-lg hover:bg-black/50 transition-all duration-200 z-40"
     >
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
@@ -220,7 +221,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -241,39 +242,37 @@ const showProjectDetails = ref(false)
 const selectedProject = ref(null)
 const editingProject = ref(null)
 const projects = ref([])
-const tasks = ref([])
 const showBackToTop = ref(false)
+const stats = ref({
+  totalProjects: 0,
+  completedProjects: 0,
+  inProgressProjects: 0,
+  overdueProjects: 0
+
+})
+const loading = ref(false)
 
 // Computed
-const stats = ({
-  totalProjects: projects.value.length,
-  completedProjects: projects.value.filter(p => p.completion === 100).length,
-  inProgressProjects: projects.value.filter(p => p.completion > 0 && p.completion < 100).length,
-  overdueProjects: projects.value.filter(p => new Date(p.deadline) < new Date() && p.completion < 100).length
-})
-// const stats = computed(() => ({
-//   totalProjects: projects.value.length,
-//   completedProjects: projects.value.filter(p => p.completion === 100).length,
-//   inProgressProjects: projects.value.filter(p => p.completion > 0 && p.completion < 100).length,
-//   overdueProjects: projects.value.filter(p => new Date(p.deadline) < new Date() && p.completion < 100).length
-// }))
+const loadStats = () => {
+    stats.value = {
+      totalProjects: projects.value.length,
+      completedProjects: projects.value.filter(p => p.completion === 100).length,
+      inProgressProjects: projects.value.filter(p => p.completion >= 0 && p.completion < 100).length,
+      overdueProjects: projects.value.filter(p => new Date(p.deadlineDate) < new Date() && p.completion < 100).length
+    }
+}
 
-const filteredTasks = computed(() => {
-  if (!selectedProject.value) return []
-  return tasks.value.filter(task => task.projectId === selectedProject.value.id)
-})
-
-const upcomingDeadlines = computed(() => {
+const upcomingDeadlines = () => {
   const now = new Date()
   const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
   
   return projects.value
     .filter(project => {
-      const deadline = new Date(project.deadline)
+      const deadline = new Date(project.deadlineDate)
       return deadline > now && deadline <= nextWeek && project.completion < 100
     })
     .map(project => {
-      const deadline = new Date(project.deadline)
+      const deadline = new Date(project.deadlineDate)
       const now = new Date()
       const daysLeft = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24))
       return {
@@ -281,11 +280,10 @@ const upcomingDeadlines = computed(() => {
         daysLeft
       }
     })
-    .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+    .sort((a, b) => new Date(a.deadlineDate) - new Date(b.deadlineDate))
     .slice(0, 3)
-})
+}
 
-// Methods
 const handleLogout = () => {
   authService.logout();
   user.clearUser();
@@ -299,7 +297,7 @@ const handleNewProject = () => {
 
 const handleCloseProjectForm = () => {
   showProjectForm.value = false
-  editingProject.value = null
+  editingProject.value = null;
 }
 
 const handleProjectSelected = (project) => {
@@ -314,17 +312,12 @@ const handleEditProject = (project) => {
 }
 
 const handleDeleteProject = (projectId) => {
-  if (confirm('Are you sure you want to delete this project? All tasks in this project will also be deleted.')) {
     projects.value = projects.value.filter(p => p.id !== projectId)
-    tasks.value = tasks.value.filter(t => t.projectId !== projectId)
     
     if (selectedProject.value?.id === projectId) {
       selectedProject.value = null
       showProjectDetails.value = false
     }
-    
-    saveToLocalStorage()
-  }
 }
 
 const handleProjectSaved = (projectData) => {
@@ -336,65 +329,15 @@ const handleProjectSaved = (projectData) => {
         ...projects.value[index], 
         ...projectData,
         completion: projects.value[index].completion || 0,
-        taskCount: tasks.value.filter(t => t.projectId === projectData.id).length
+        taskCount: projects.value[index].tasks.value.filter(t => t.projectId === projectData.id).length
       }
     }
   } else {
     // Create new project
-    const newProject = {
-      ...projectData,
-      id: Date.now(),
-      completion: 0,
-      taskCount: 0,
-      status: 'active',
-      createdAt: new Date().toISOString()
-    }
-    projects.value.push(newProject)
+    projects.value = [projectData, ...projects.value]
   }
   
-  handleCloseProjectForm()
-  saveToLocalStorage()
-}
-
-const handleTaskCreated = (taskData) => {
-  const newTask = {
-    ...taskData,
-    id: Date.now(),
-    createdAt: new Date().toISOString()
-  }
-  tasks.value.push(newTask)
-  updateProjectStats(taskData.projectId)
-  saveToLocalStorage()
-}
-
-const handleTaskUpdated = (taskData) => {
-  const index = tasks.value.findIndex(t => t.id === taskData.id)
-  if (index !== -1) {
-    tasks.value[index] = taskData
-    updateProjectStats(taskData.projectId)
-    saveToLocalStorage()
-  }
-}
-
-const handleTaskDeleted = (taskId) => {
-  const task = tasks.value.find(t => t.id === taskId)
-  tasks.value = tasks.value.filter(t => t.id !== taskId)
-  if (task) {
-    updateProjectStats(task.projectId)
-    saveToLocalStorage()
-  }
-}
-
-const updateProjectStats = (projectId) => {
-  const projectTasks = tasks.value.filter(t => t.projectId === projectId)
-  const completedTasks = projectTasks.filter(t => t.status === 'completed').length
-  const completion = projectTasks.length > 0 ? Math.round((completedTasks / projectTasks.length) * 100) : 0
-  
-  const projectIndex = projects?.value?.findIndex(p => p.id === projectId)
-  if (projectIndex !== -1) {
-    projects.value[projectIndex].taskCount = projectTasks.length
-    projects.value[projectIndex].completion = completion
-  }
+  handleCloseProjectForm();
 }
 
 const formatDate = (dateString) => {
@@ -413,45 +356,24 @@ const handleScroll = () => {
   showBackToTop.value = window.scrollY > 400
 }
 
-const saveToLocalStorage = () => {
-  localStorage.setItem('projects', JSON.stringify(projects.value))
-  localStorage.setItem('tasks', JSON.stringify(tasks.value))
-}
-
-const loadFromLocalStorage = () => {
-  const savedProjects = localStorage.getItem('projects')
-  const savedTasks = localStorage.getItem('tasks')
-  
-  if (savedProjects) {
-    projects.value = JSON.parse(savedProjects)
-  }
-  
-  if (savedTasks) {
-    tasks.value = JSON.parse(savedTasks)
-  }
-}
 
 const fetchProjects = async ()  => {
+ loading.value = true;
   try {
     const {data: prjs} = await projectService.getAll();
     projects.value = prjs;
+    loadStats();
   } catch (e) {
     console.log(e);
     projects.value = [];
+  } finally {
+ loading.value = false;
   }
 }
 
-// Lifecycle
 onMounted(() => {
-  // loadFromLocalStorage()
- fetchProjects();
+  fetchProjects();
   
- 
-  // Initialize project stats
-  projects.value.forEach(project => {
-    updateProjectStats(project.id)
-  })
-
   // Add scroll listener for back to top button
   window.addEventListener('scroll', handleScroll)
 })

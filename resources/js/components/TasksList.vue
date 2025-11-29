@@ -120,6 +120,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import TaskFormModal from './TaskFormModal.vue'
+import { taskService } from '@/service/TaskService'
 
 // Props
 const props = defineProps({
@@ -151,7 +152,7 @@ const filteredTasks = computed(() => {
 const taskStatuses = computed(() => [
   { value: 'all', label: 'All Tasks' },
   { value: 'pending', label: 'Pending' },
-  { value: 'in-progress', label: 'In Progress' },
+  { value: 'inprogress', label: 'In Progress' },
   { value: 'completed', label: 'Completed' }
 ])
 
@@ -159,7 +160,7 @@ const taskStatuses = computed(() => [
 const getStatusVariant = (status) => {
   const variants = {
     'pending': 'secondary',
-    'in-progress': 'default',
+    'inprogress': 'default',
     'completed': 'outline'
   }
   return variants[status] || 'secondary'
@@ -178,7 +179,7 @@ const editTask = (task) => {
 
 const deleteTask = (task) => {
   if (confirm(`Are you sure you want to delete "${task.title}"?`)) {
-    emit('task-deleted', task.id)
+      emit('task-deleted', task.id);
   }
 }
 

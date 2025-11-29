@@ -1,7 +1,7 @@
 <template>
   <Sheet :open="open" @update:open="$emit('close')">
     <SheetContent class="sm:max-w-lg overflow-y-auto">
-      <SheetHeader class="text-left">
+      <SheetHeader class="text-left mt-4 border-b-2">
         <SheetTitle class="flex items-center justify-between">
           <span>{{ project?.title }}</span>
           <div class="flex items-center space-x-2">
@@ -23,8 +23,8 @@
           {{ project?.description }}
         </SheetDescription>
       </SheetHeader>
-
-      <div class="mt-6 space-y-6 px-4">
+      
+      <div class="space-y-6 px-4 h-screen overflow-y-auto">
         <!-- Project Overview -->
         <Card>
           <CardContent class="p-4">
@@ -49,7 +49,7 @@
               </div>
             </div>
             <div class="mt-4">
-              <Progress :value="project?.completion" class="w-full" />
+              <Progress :model-value="project?.completion" class="w-full" />
             </div>
           </CardContent>
         </Card>
@@ -88,7 +88,7 @@
             >
               <div class="flex items-center space-x-3 flex-1">
                 <Checkbox 
-                  :checked="task.status === 'completed'" 
+                  :default-value="task.status === 'completed'" 
                   @click="toggleTaskStatus(task)"
                   class="shrink-0"
                 />
@@ -171,6 +171,8 @@ import { Progress } from '@/components/ui/progress'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import TaskFormModal from './TaskFormModal.vue'
+import { taskService } from '@/service/TaskService'
+import { projectService } from '@/service/ProjectService'
 
 // Props
 const props = defineProps({
@@ -234,15 +236,18 @@ const formatDate = (dateString) => {
   })
 }
 
-const toggleTaskStatus = (task) => {
-  const newStatus = task.status === 'completed' ? 'pending' : 'completed'
-  const updatedTask = { ...task, status: newStatus }
+const toggleTaskStatus = async (task) => {
+  const completed = 'completed'
+  if (task.status !== completed) {
+    const updatedTask = { ...task, status: completed }
 
-  const index = props.project.tasks.findIndex(t => t.id === updatedTask.id)
+    const index = props.project.tasks.findIndex(t => t.id === updatedTask.id)
 
-  if (index !== -1) {
-   props.project.tasks[index] = updatedTask;
-   props.project.status = 'inprogress';
+    if (index !== -1) {
+      props.project.tasks[index] = updatedTask;
+      await taskService.markAsCompleted(updatedTask)
+      emit('task-updated', updatedTask)
+    }
   }
 }
 
@@ -251,8 +256,11 @@ const editTask = (task) => {
   showTaskForm.value = true
 }
 
-const deleteTask = (task) => {
+const deleteTask = async (task) => {
   if (confirm(`Are you sure you want to delete "${task.title}"?`)) {
+    await taskService.delete(task);
+    const arr = props.project.tasks.filter((t) => t.id !== task.id);
+    props.project.tasks = arr;
     emit('task-deleted', task.id)
   }
 }
@@ -261,22 +269,29 @@ const handleEditProject = () => {
   emit('edit-project', props.project)
 }
 
-const handleDeleteProject = () => {
-  emit('delete-project', props.project.id)
+const handleDeleteProject = async () => {
+  if (confirm(`Are you sure you want to delete "${props.project.title}"? This will also delete all tasks in this project.`)) {
+    await projectService.delete(props.project) ;
+    emit('delete-project', props.project.id)
+  }
 }
 
 const handleTaskSaved = (taskData) => {
   showTaskForm.value = false
   
-  if (taskData.id) {
+  if (taskData?.projectId != undefined) {
+    const index = props.project.tasks.findIndex((t) => t.id === taskData.id);
+    props.project.tasks[index] = taskData;
     // Update existing task
     emit('task-updated', taskData)
   } else {
     // Create new task
-    emit('task-created', {
+    const data = {
       ...taskData,
       projectId: props.project.id
-    })
+    }
+    props.project.tasks.push(data)
+    emit('task-created', data)
   }
   
   editingTask.value = null

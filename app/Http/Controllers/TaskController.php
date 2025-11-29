@@ -38,7 +38,7 @@ class TaskController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'desc' => 'required|string',
+            'desc' => '',
             'status' => ['required', Rule::enum(TaskStatus::class)],
             'assignedDate' => 'required|date',
             'projectId'   => 'required|int|exists:projects,id',
@@ -102,7 +102,7 @@ class TaskController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'desc' => 'required|string',
+            'desc' => '',
             'status' => ['required', Rule::enum(TaskStatus::class)],
             'assignedDate' => 'required|date',
         ]);

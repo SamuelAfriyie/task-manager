@@ -5,7 +5,7 @@ export const projectService = {
         try {
             const { data: response } = await apiClient.get(`/project`)
 
-            return { status: true, data: { ...response.data } }
+            return { status: true, data: response.data }
 
         } catch (error) {
             throw projectService.handleError(error)

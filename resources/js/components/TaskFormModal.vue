@@ -23,10 +23,10 @@
 
           <!-- Description -->
           <div class="space-y-2">
-            <Label for="task-description">Description (Optional)</Label>
+            <Label for="task-desc">Description (Optional)</Label>
             <Textarea
-              id="task-description"
-              v-model="form.description"
+              id="task-desc"
+              v-model="form.desc"
               placeholder="Describe the task..."
               rows="3"
             />
@@ -41,7 +41,7 @@
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in-progress">In Progress</SelectItem>
+                <SelectItem value="inprogress">In Progress</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
               </SelectContent>
             </Select>
@@ -80,6 +80,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { taskService } from '@/service/TaskService'
+import { number } from 'zod/v4'
 
 // Props
 const props = defineProps({
@@ -90,6 +92,10 @@ const props = defineProps({
   editingTask: {
     type: Object,
     default: null
+  },
+  projectId: {
+    type: number,
+    default: 0
   }
 })
 
@@ -98,7 +104,7 @@ const emit = defineEmits(['close', 'saved'])
 // Form state
 const form = reactive({
   title: '',
-  description: '',
+  desc: '',
   status: 'pending',
   assignedDate: new Date().toISOString().split('T')[0]
 })
@@ -112,7 +118,7 @@ const errors = reactive({
 watch(() => props.editingTask, (task) => {
   if (task) {
     form.title = task.title
-    form.description = task.description
+    form.desc = task.desc
     form.status = task.status
     form.assignedDate = task.assignedDate
   } else {
@@ -130,7 +136,7 @@ watch(() => props.open, (isOpen) => {
 // Methods
 const resetForm = () => {
   form.title = ''
-  form.description = ''
+  form.desc = ''
   form.status = 'pending'
   form.assignedDate = new Date().toISOString().split('T')[0]
   errors.title = ''
@@ -155,14 +161,21 @@ const validateForm = () => {
   return isValid
 }
 
-const handleSubmit = () => {
+const handleSubmit = async () => {
   if (!validateForm()) {
     return
   }
 
-  const taskData = {
-    ...form,
-    id: props.editingTask?.id || null
+  let taskData = {
+    ...form, projectId: props.projectId
+  }
+
+  if(props.editingTask?.id == undefined) {
+   const {data:res} = await taskService.create(taskData)
+   taskData = res;
+  } else {
+    taskData.id = props.editingTask.id;
+    await taskService.update(taskData)
   }
 
   emit('saved', taskData)

@@ -18,7 +18,11 @@
               v-model="form.title"
               placeholder="Enter project title"
               required
+              :class="errors.title ? 'border-red-500 focus-visible:ring-red-500' : ''"
             />
+            <p v-if="errors.title" class="text-sm text-red-600">
+              {{ errors.title }}
+            </p>
           </div>
 
           <!-- Description -->
@@ -29,6 +33,7 @@
               v-model="form.desc"
               placeholder="Describe the project..."
               rows="3"
+              required
             />
           </div>
 
@@ -40,7 +45,11 @@
               v-model="form.deadlineDate"
               type="date"
               required
+               :class="errors.deadlineDate ? 'border-red-500 focus-visible:ring-red-500' : ''"
             />
+             <p v-if="errors.deadlineDate" class="text-sm text-red-600">
+              {{ errors.deadlineDate }}
+            </p>
           </div>
         </div>
 
@@ -84,7 +93,7 @@ const emit = defineEmits(['close', 'saved'])
 const form = reactive({
   title: '',
   desc: '',
-  deadlineDate: ''
+  deadlineDate: new Date().toISOString().split('T')[0]
 })
 
 const errors = reactive({
@@ -114,7 +123,7 @@ watch(() => props.open, (isOpen) => {
 const resetForm = () => {
   form.title = ''
   form.desc = ''
-  form.deadlineDate = ''
+  form.deadlineDate = new Date().toISOString().split('T')[0]
   errors.title = ''
   errors.deadlineDate = ''
 }
@@ -145,12 +154,12 @@ const handleSubmit = async () => {
     return
   }
 
-  const projectData = {
+  let projectData = {
     ...form
   }
 if(props.editingProject?.id == undefined) {
-  await projectService.create(projectData);
-  projectData.id = Date.now();
+  const {data: res} = await projectService.create(projectData);
+  projectData = res;
 } else {
   projectData.id = props.editingProject?.id ;
   await projectService.update(projectData);

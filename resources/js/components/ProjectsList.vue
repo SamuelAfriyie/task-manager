@@ -21,7 +21,7 @@
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Projects</SelectItem>
-          <SelectItem value="active">Active</SelectItem>
+          <SelectItem value="inprogress">In Progress</SelectItem>
           <SelectItem value="completed">Completed</SelectItem>
           <SelectItem value="overdue">Overdue</SelectItem>
         </SelectContent>
@@ -29,7 +29,16 @@
     </div>
 
     <!-- Rest of the template remains the same but update the progress and date display -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-4"> -->
+      <!-- Loader Shimmer -->
+<div v-if="props.loading" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <ProjectLoader />
+</div>
+
+<div 
+v-else
+  class="grid grid-cols-1 md:grid-cols-2 gap-4"
+>
       <Card 
         v-for="project in filteredProjects" 
         :key="project.id"
@@ -44,8 +53,11 @@
                 <Badge :variant="getStatusBadgeVariant(project.status)" class="shrink-0">
                   {{ project.status }}
                 </Badge>
+                <!-- <Badge :variant="getStatusBadgeVariant(project.status)" class="shrink-0">
+                  {{ project.status }}
+                </Badge> -->
               </div>
-              <p class="text-sm text-gray-600 line-clamp-2">{{ project.description }}</p>
+              <p class="text-sm text-gray-600 line-clamp-2">{{ project.desc }}</p>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger as-child>
@@ -72,7 +84,7 @@
               <span class="text-sm text-gray-600">Progress</span>
               <span class="text-sm font-medium text-gray-900">{{ project.completion }}%</span>
             </div>
-            <Progress :value="project.completion" class="w-full" />
+            <Progress :modelValue="project.completion" class="w-full" />
           </div>
 
           <!-- Project Meta -->
@@ -92,6 +104,7 @@
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
 
     <!-- Empty State -->
@@ -107,7 +120,7 @@
         Get started by creating your first project.
       </p>
     </div>
-  </div>
+  <!-- </div> -->
 </template>
 
 <script setup>
@@ -119,12 +132,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress'
 import { Badge } from '@/components/ui/badge'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { projectService } from '@/service/ProjectService'
+import ProjectLoader from './ProjectLoader.vue'
+import { boolean } from 'zod/v4'
 
 // Props
 const props = defineProps({
   projects: {
     type: Array,
     default: () => []
+  },
+  loading: {
+    type: boolean,
+    default: false
   }
 })
 
@@ -142,7 +162,7 @@ const filteredProjects = computed(() => {
   if (searchQuery.value) {
     filtered = filtered.filter(project =>
       project.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.value.toLowerCase())
+      project.desc.toLowerCase().includes(searchQuery.value.toLowerCase())
     )
   }
 
@@ -163,15 +183,16 @@ const editProject = (project) => {
   emit('edit-project', project)
 }
 
-const deleteProject = (project) => {
+const deleteProject = async (project) => {
   if (confirm(`Are you sure you want to delete "${project.title}"? This will also delete all tasks in this project.`)) {
+    await projectService.delete(project)  
     emit('delete-project', project.id)
   }
 }
 
 const getStatusBadgeVariant = (status) => {
   const variants = {
-    'active': 'default',
+    'inprogress': 'default',
     'completed': 'outline',
     'overdue': 'destructive'
   }
